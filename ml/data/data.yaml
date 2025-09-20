@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 6
+names: ['bistable flip-flop', 'comparator1', 'discharge circuit', 'output circuit', 'reset circuit', 'resistance']
+
+roboflow:
+  workspace: 52hina1314
+  project: my-first-project-hhigx
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/52hina1314/my-first-project-hhigx/dataset/1
