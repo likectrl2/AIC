@@ -146,39 +146,13 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
 
-        .results-tabs {
-            display: flex;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #dee2e6;
-        }
 
-        .tab {
-            padding: 10px 20px;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .tab.active {
-            border-bottom-color: #4facfe;
-            color: #4facfe;
-            font-weight: bold;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .component-list, .connection-list, .net-list {
-            max-height: 300px;
+        .component-list {
+            max-height: 400px;
             overflow-y: auto;
         }
 
-        .component-item, .connection-item, .net-item {
+        .component-item {
             background: white;
             margin: 10px 0;
             padding: 15px;
@@ -187,12 +161,12 @@
             border-left: 4px solid #4facfe;
         }
 
-        .component-item h4, .connection-item h4, .net-item h4 {
+        .component-item h4 {
             color: #333;
             margin-bottom: 8px;
         }
 
-        .component-item p, .connection-item p, .net-item p {
+        .component-item p {
             color: #666;
             font-size: 0.9em;
             margin: 2px 0;
@@ -325,56 +299,7 @@
 
                     <div class="stats" id="statsDiv"></div>
 
-                    <div class="results-tabs">
-                        <div class="tab active" onclick="showTab('components')">组件</div>
-                        <div class="tab" onclick="showTab('connections')">连接</div>
-                        <div class="tab" onclick="showTab('nets')">网络</div>
-                        <div class="tab" onclick="showTab('breadboard')">面包板布局</div>
-                    </div>
-
-                    <div id="componentsTab" class="tab-content active">
-                        <div class="component-list" id="componentList"></div>
-                    </div>
-
-                    <div id="connectionsTab" class="tab-content">
-                        <div class="connection-list" id="connectionList"></div>
-                    </div>
-
-                    <div id="netsTab" class="tab-content">
-                        <div class="net-list" id="netList"></div>
-                    </div>
-
-                    <div id="breadboardTab" class="tab-content">
-                        <div style="text-align: center; margin-bottom: 20px;">
-                            <button class="analyze-btn" id="generateBreadboardBtn" onclick="generateBreadboardLayout()" style="width: auto; padding: 10px 20px;">
-                                🔌 生成面包板布局
-                            </button>
-                        </div>
-                        
-                        <div id="breadboardLoading" class="loading" style="display: none;">
-                            <div class="spinner"></div>
-                            <p>正在生成面包板布局...</p>
-                        </div>
-                        
-                        <div id="breadboardContent" style="display: none;">
-                            <div class="image-container">
-                                <img id="breadboardImage" class="result-image" alt="面包板布局">
-                            </div>
-                            
-                            <div class="stats" id="breadboardStats"></div>
-                            
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
-                                <div>
-                                    <h4>组件位置</h4>
-                                    <div class="component-list" id="breadboardComponents"></div>
-                                </div>
-                                <div>
-                                    <h4>跳线连接</h4>
-                                    <div class="connection-list" id="breadboardJumpers"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="component-list" id="componentList"></div>
                 </div>
 
                 <div id="errorDiv" style="display: none;"></div>
@@ -470,12 +395,6 @@
                 // 显示组件列表
                 displayComponents(analysis.components || []);
 
-                // 显示连接列表
-                displayConnections(analysis.connections || []);
-
-                // 显示网络列表
-                displayNets(analysis.nets || []);
-
                 document.getElementById('resultsDiv').style.display = 'block';
             } catch (error) {
                 console.error('显示结果时发生错误:', error);
@@ -489,19 +408,7 @@
             statsDiv.innerHTML = `
                 <div class="stat-card">
                     <div class="stat-number">${summary.total_components || 0}</div>
-                    <div class="stat-label">组件</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${summary.total_wires || 0}</div>
-                    <div class="stat-label">导线</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${summary.total_connections || 0}</div>
-                    <div class="stat-label">连接</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${summary.total_nets || 0}</div>
-                    <div class="stat-label">网络</div>
+                    <div class="stat-label">检测到的组件</div>
                 </div>
             `;
         }
@@ -512,118 +419,12 @@
             componentList.innerHTML = components.map((comp, index) => `
                 <div class="component-item">
                     <h4>组件 ${index + 1}: ${comp.class || '未知'}</h4>
-                    <p><strong>置信度:</strong> <span class="editable" contenteditable="true" onblur="updateComponent(${comp.component_id || index}, 'confidence', this.textContent)">${comp.confidence ? comp.confidence.toFixed(3) : '0.000'}</span></p>
+                    <p><strong>置信度:</strong> ${comp.confidence ? comp.confidence.toFixed(3) : '0.000'}</p>
                     <p><strong>位置:</strong> ${comp.bbox && comp.bbox.length >= 4 ? `(${comp.bbox[0].toFixed(1)}, ${comp.bbox[1].toFixed(1)}) - (${comp.bbox[2].toFixed(1)}, ${comp.bbox[3].toFixed(1)})` : '未知'}</p>
-                    <p><strong>引脚数量:</strong> ${comp.pins ? comp.pins.length : 0}</p>
-                    <div style="margin-top: 10px;">
-                        <strong>引脚位置:</strong>
-                        ${comp.pins && Array.isArray(comp.pins) ? comp.pins.map(pin => `
-                            <div style="margin-left: 10px; font-size: 0.9em; color: #666;">
-                                引脚 ${pin.id}: (${pin.pos && pin.pos.length >= 2 ? pin.pos[0].toFixed(1) : '0'}, ${pin.pos && pin.pos.length >= 2 ? pin.pos[1].toFixed(1) : '0'})
-                            </div>
-                        `).join('') : '<div style="margin-left: 10px; font-size: 0.9em; color: #666;">无引脚信息</div>'}
-                    </div>
                 </div>
             `).join('');
         }
 
-        // 显示连接列表
-        function displayConnections(connections) {
-            const connectionList = document.getElementById('connectionList');
-            connectionList.innerHTML = connections.map((conn, index) => `
-                <div class="connection-item">
-                    <h4>连接 ${index + 1}</h4>
-                    <p><strong>引脚1:</strong> ${conn.pin1 ? conn.pin1.pin_id : '未知'}</p>
-                    <p><strong>引脚2:</strong> ${conn.pin2 ? conn.pin2.pin_id : '未知'}</p>
-                    <p><strong>长度:</strong> <span class="editable" contenteditable="true" onblur="updateConnection('${conn.connection_id}', 'length', this.textContent)">${conn.length ? conn.length.toFixed(2) : '0.00'}</span></p>
-                    <p><strong>组件:</strong> ${conn.components && Array.isArray(conn.components) ? conn.components.join(' ↔ ') : '未知'}</p>
-                </div>
-            `).join('');
-        }
-
-        // 显示网络列表
-        function displayNets(nets) {
-            const netList = document.getElementById('netList');
-            netList.innerHTML = nets.map((net, index) => `
-                <div class="net-item">
-                    <h4>网络 ${index + 1}: ${net.net_id || '未知'}</h4>
-                    <p><strong>引脚数量:</strong> ${net.pin_count || 0}</p>
-                    <div style="margin-top: 10px;">
-                        <strong>包含的引脚:</strong>
-                        <div style="margin-left: 10px; font-size: 0.9em; color: #666;">
-                            ${net.pins && Array.isArray(net.pins) ? net.pins.join(', ') : '无'}
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // 更新组件信息
-        async function updateComponent(componentId, field, value) {
-            try {
-                const response = await fetch('/api/update_component', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        component_id: componentId,
-                        updates: { [field]: value }
-                    })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    showSuccess('组件信息已更新');
-                } else {
-                    throw new Error(result.error);
-                }
-            } catch (error) {
-                showError('更新失败: ' + error.message);
-            }
-        }
-
-        // 更新连接信息
-        async function updateConnection(connectionId, field, value) {
-            try {
-                const response = await fetch('/api/update_connection', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        connection_id: connectionId,
-                        updates: { [field]: value }
-                    })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    showSuccess('连接信息已更新');
-                } else {
-                    throw new Error(result.error);
-                }
-            } catch (error) {
-                showError('更新失败: ' + error.message);
-            }
-        }
-
-        // 显示标签页
-        function showTab(tabName) {
-            // 隐藏所有标签页内容
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-
-            // 移除所有标签的激活状态
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-
-            // 显示选中的标签页
-            document.getElementById(tabName + 'Tab').classList.add('active');
-            event.target.classList.add('active');
-        }
 
         // 显示错误信息
         function showError(message) {
@@ -643,121 +444,6 @@
             }, 3000);
         }
 
-        // 生成面包板布局
-        async function generateBreadboardLayout() {
-            if (!currentAnalysis) {
-                showError('请先进行电路分析');
-                return;
-            }
-
-            // 显示加载状态
-            document.getElementById('breadboardLoading').style.display = 'block';
-            document.getElementById('breadboardContent').style.display = 'none';
-
-            try {
-                const response = await fetch('/api/generate_breadboard_layout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        analysis_result: currentAnalysis
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.error) {
-                    throw new Error(result.error);
-                }
-
-                if (result.success) {
-                    displayBreadboardLayout(result);
-                    showSuccess('面包板布局生成成功！');
-                } else {
-                    throw new Error('生成面包板布局失败');
-                }
-
-            } catch (error) {
-                showError('生成面包板布局失败: ' + error.message);
-            } finally {
-                document.getElementById('breadboardLoading').style.display = 'none';
-            }
-        }
-
-        // 显示面包板布局
-        function displayBreadboardLayout(layoutResult) {
-            // 显示面包板图像
-            if (layoutResult.layout_image) {
-                document.getElementById('breadboardImage').src = 'data:image/png;base64,' + layoutResult.layout_image;
-            }
-
-            // 显示统计信息
-            displayBreadboardStats(layoutResult.layout_data);
-
-            // 显示组件位置
-            displayBreadboardComponents(layoutResult.layout_data.components);
-
-            // 显示跳线连接
-            displayBreadboardJumpers(layoutResult.layout_data.jumpers);
-
-            document.getElementById('breadboardContent').style.display = 'block';
-        }
-
-        // 显示面包板统计信息
-        function displayBreadboardStats(layoutData) {
-            const statsDiv = document.getElementById('breadboardStats');
-            statsDiv.innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-number">${layoutData.components.length}</div>
-                    <div class="stat-label">已放置组件</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${layoutData.jumpers.length}</div>
-                    <div class="stat-label">跳线数量</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${layoutData.breadboard_info.total_positions}</div>
-                    <div class="stat-label">占用孔位</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${layoutData.breadboard_info.rows * layoutData.breadboard_info.cols * 10}</div>
-                    <div class="stat-label">总孔位数</div>
-                </div>
-            `;
-        }
-
-        // 显示面包板组件位置
-        function displayBreadboardComponents(components) {
-            const componentList = document.getElementById('breadboardComponents');
-            componentList.innerHTML = components.map((comp, index) => `
-                <div class="component-item">
-                    <h4>组件 ${index + 1}: ${comp.type}</h4>
-                    <p><strong>组件ID:</strong> ${comp.component_id}</p>
-                    <p><strong>位置:</strong> ${comp.positions.join(', ')}</p>
-                    <p><strong>引脚数量:</strong> ${comp.positions.length}</p>
-                </div>
-            `).join('');
-        }
-
-        // 显示面包板跳线连接
-        function displayBreadboardJumpers(jumpers) {
-            const jumperList = document.getElementById('breadboardJumpers');
-            if (jumpers.length === 0) {
-                jumperList.innerHTML = '<div class="component-item"><p>无需跳线连接</p></div>';
-                return;
-            }
-
-            jumperList.innerHTML = jumpers.map((jumper, index) => `
-                <div class="connection-item">
-                    <h4>跳线 ${index + 1}</h4>
-                    <p><strong>起点:</strong> ${jumper.from}</p>
-                    <p><strong>终点:</strong> ${jumper.to}</p>
-                    <p><strong>颜色:</strong> <span style="color: ${jumper.color}; font-weight: bold;">${jumper.color}</span></p>
-                    ${jumper.path && jumper.path.length > 2 ? `<p><strong>路径:</strong> ${jumper.path.join(' → ')}</p>` : ''}
-                </div>
-            `).join('');
-        }
     </script>
 </body>
 </html>

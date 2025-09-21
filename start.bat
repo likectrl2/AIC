@@ -26,6 +26,6 @@ echo ✅ 环境检查通过
 
 echo 启动服务器...
 cd backend
-python app.py
+python app_simple.py
 
 pause
